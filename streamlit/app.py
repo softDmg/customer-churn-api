@@ -9,6 +9,19 @@ st.set_page_config(page_title="Churn Predictor", layout="centered")
 st.title("📞 Customer Churn Prediction")
 st.markdown("Use the form below to check if a customer is likely to churn.")
 
+# --- Simple Login (secrets-based)
+st.sidebar.title("🔐 Login")
+username_input = st.sidebar.text_input("Username")
+password_input = st.sidebar.text_input("Password", type="password")
+
+if (
+    username_input != st.secrets["auth"]["username"]
+    or password_input != st.secrets["auth"]["password"]
+):
+    st.warning("Please enter valid credentials.")
+    st.stop()
+
+
 # --- 🔄 Model Selection ---
 model_choice = st.radio(
     "Select Model:",
