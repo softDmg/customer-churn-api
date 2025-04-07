@@ -126,3 +126,4 @@ websocket-client==1.8.0
 widgetsnbextension==4.0.13
 streamlit
 requests
+xgboost

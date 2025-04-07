@@ -4,6 +4,10 @@ __pycache__/
 *.pyd
 .Python
 env/
+artifacts/*.csv
+artifacts/*.pkl
+artifacts/*.json
+!artifacts/*.joblib   # <- this allows pushing model files
 venv/
 ENV/
 *.DS_Store
