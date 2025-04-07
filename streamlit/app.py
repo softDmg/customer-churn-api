@@ -1,14 +1,19 @@
-# app.py
+# streamlit/app.py
 
 import streamlit as st
-import requests
+import pandas as pd
+import joblib
 
+# Load model and scaler
+model = joblib.load("artifacts/logistic_model.joblib")
+scaler = joblib.load("artifacts/scaler.joblib")
+
+# App config
 st.set_page_config(page_title="Churn Prediction App", layout="centered")
-
 st.title("📞 Customer Churn Prediction")
-st.markdown("Enter customer info to predict churn risk:")
+st.markdown("Enter customer details to predict churn risk:")
 
-# Collect user inputs
+# Input fields
 gender = st.selectbox("Gender", [0, 1], format_func=lambda x: "Female" if x == 0 else "Male")
 SeniorCitizen = st.selectbox("Senior Citizen", [0, 1])
 Partner = st.selectbox("Has Partner", [0, 1])
@@ -29,7 +34,7 @@ PaymentMethod = st.selectbox("Payment Method", [0, 1, 2, 3])
 MonthlyCharges = st.slider("Monthly Charges ($)", 10, 120, 70)
 TotalCharges = st.slider("Total Charges ($)", 0, 9000, 800)
 
-# Prepare input dictionary
+# Input dictionary
 input_data = {
     "gender": gender,
     "SeniorCitizen": SeniorCitizen,
@@ -52,17 +57,18 @@ input_data = {
     "TotalCharges": TotalCharges
 }
 
-# Button to send data
+# Prediction logic
 if st.button("Predict Churn"):
-    with st.spinner("Sending data to model..."):
-        url = "http://localhost:8000/predict"
-        # url = "https://customer-churn-api-xmv5.onrender.com/predict"
+    with st.spinner("Making prediction..."):
         try:
-            response = requests.post(url, json=input_data)
-            result = response.json()
+            input_df = pd.DataFrame([input_data])
+            input_scaled = scaler.transform(input_df)
+            prediction = model.predict(input_scaled)[0]
+            probability = model.predict_proba(input_scaled)[0][1]
+            label = "Churn" if prediction == 1 else "No Churn"
 
-            st.success(f"Prediction: **{result['prediction']}**")
-            st.info(f"Churn Probability: `{result['churn_probability'] * 100:.2f}%`")
+            st.success(f"Prediction: **{label}**")
+            st.info(f"Churn Probability: `{probability * 100:.2f}%`")
 
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Something went wrong: {e}")
