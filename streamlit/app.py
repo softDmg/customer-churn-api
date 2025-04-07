@@ -128,29 +128,27 @@ if st.button("🔍 Predict Churn"):
         except Exception as e:
             st.error(f"Error: {e}")
 
+    # Define log file path
+    os.makedirs("logs", exist_ok=True)
+    log_path = "logs/predictions.csv"
 
+    # Add log entry
+    log_entry = {
+        "timestamp": datetime.datetime.now().isoformat(),
+        "model": model_choice,
+        "prediction": label,
+        "probability": round(probability, 4)
+    }
+    log_entry.update(input_data)
 
-        # Define log file path
-        os.makedirs("logs", exist_ok=True)
-        log_path = "logs/predictions.csv"
+    # Convert to DataFrame
+    log_df = pd.DataFrame([log_entry])
 
-        # Add log entry
-        log_entry = {
-            "timestamp": datetime.datetime.now().isoformat(),
-            "model": model_choice,
-            "prediction": label,
-            "probability": round(probability, 4)
-        }
-        log_entry.update(input_data)
-
-        # Convert to DataFrame
-        log_df = pd.DataFrame([log_entry])
-
-        # Append to CSV
-        if os.path.exists(log_path):
-            log_df.to_csv(log_path, mode='a', index=False, header=False)
-        else:
-            log_df.to_csv(log_path, index=False)
+    # Append to CSV
+    if os.path.exists(log_path):
+        log_df.to_csv(log_path, mode='a', index=False, header=False)
+    else:
+        log_df.to_csv(log_path, index=False)
 
 
 # 🧼 Clean footer
