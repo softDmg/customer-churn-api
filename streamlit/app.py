@@ -4,19 +4,29 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Load model and scaler
-model = joblib.load("artifacts/logistic_model.joblib")
-scaler = joblib.load("artifacts/scaler.joblib")
-
 # App config
-st.set_page_config(page_title="Customer Churn Predictor", layout="centered")
-
+st.set_page_config(page_title="Churn Predictor", layout="centered")
 st.title("📞 Customer Churn Prediction")
 st.markdown("Use the form below to check if a customer is likely to churn.")
+
+# --- 🔄 Model Selection ---
+model_choice = st.radio(
+    "Select Model:",
+    options=["Logistic Regression", "XGBoost"],
+    horizontal=True
+)
+
+if model_choice == "XGBoost":
+    model = joblib.load("artifacts/xgb_model.joblib")
+    scaler = joblib.load("artifacts/xgb_scaler.joblib")
+else:
+    model = joblib.load("artifacts/logistic_model.joblib")
+    scaler = joblib.load("artifacts/scaler.joblib")
 
 st.markdown("---")
 st.subheader("👤 Customer Profile")
 
+# Grouped inputs
 col1, col2 = st.columns(2)
 with col1:
     gender = st.selectbox("Gender", [0, 1], format_func=lambda x: "Female" if x == 0 else "Male")
@@ -49,7 +59,7 @@ with col4:
     StreamingTV = st.selectbox("Streaming TV", [0, 1])
     StreamingMovies = st.selectbox("Streaming Movies", [0, 1])
 
-# Collect inputs
+# Prepare input
 input_data = {
     "gender": gender,
     "SeniorCitizen": SeniorCitizen,
@@ -72,7 +82,7 @@ input_data = {
     "TotalCharges": TotalCharges
 }
 
-# Predict
+# 🔮 Make prediction
 st.markdown("---")
 if st.button("🔍 Predict Churn"):
     with st.spinner("Analyzing customer data..."):
@@ -92,13 +102,12 @@ if st.button("🔍 Predict Churn"):
                 st.success("✅ Customer is likely to stay.")
 
         except Exception as e:
-            st.error(f"Something went wrong: {e}")
+            st.error(f"Error: {e}")
 
-# Hide footer & menu
-hide_style = """
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    </style>
-"""
-st.markdown(hide_style, unsafe_allow_html=True)
+# 🧼 Clean footer
+st.markdown("""
+<style>
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
