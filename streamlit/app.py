@@ -6,34 +6,28 @@ import joblib
 import os
 import datetime
 
-
-
-# App config
+# --- Page config ---
 st.set_page_config(page_title="Churn Predictor", layout="centered")
 st.title("📞 Customer Churn Prediction")
 st.markdown("Use the form below to check if a customer is likely to churn.")
 
-
+# --- Login (secrets or env) ---
 st.sidebar.title("🔐 Login")
 username_input = st.sidebar.text_input("Username")
 password_input = st.sidebar.text_input("Password", type="password")
 
-# First try Streamlit secrets (local dev)
 try:
     auth_username = st.secrets["auth"]["username"]
     auth_password = st.secrets["auth"]["password"]
 except:
-    # Fallback to environment variables (Render)
     auth_username = os.getenv("AUTH_USERNAME", "")
     auth_password = os.getenv("AUTH_PASSWORD", "")
 
-# Check credentials
 if username_input != auth_username or password_input != auth_password:
     st.warning("Please enter valid credentials.")
     st.stop()
 
-
-# --- 🔄 Model Selection ---
+# --- Model selection ---
 model_choice = st.radio(
     "Select Model:",
     options=["Logistic Regression", "XGBoost"],
@@ -47,10 +41,10 @@ else:
     model = joblib.load("artifacts/logistic_model.joblib")
     scaler = joblib.load("artifacts/scaler.joblib")
 
+# --- User Input ---
 st.markdown("---")
 st.subheader("👤 Customer Profile")
 
-# Grouped inputs
 col1, col2 = st.columns(2)
 with col1:
     gender = st.selectbox("Gender", [0, 1], format_func=lambda x: "Female" if x == 0 else "Male")
@@ -83,7 +77,7 @@ with col4:
     StreamingTV = st.selectbox("Streaming TV", [0, 1])
     StreamingMovies = st.selectbox("Streaming Movies", [0, 1])
 
-# Prepare input
+# --- Make prediction ---
 input_data = {
     "gender": gender,
     "SeniorCitizen": SeniorCitizen,
@@ -106,7 +100,6 @@ input_data = {
     "TotalCharges": TotalCharges
 }
 
-# 🔮 Make prediction
 st.markdown("---")
 if st.button("🔍 Predict Churn"):
     with st.spinner("Analyzing customer data..."):
@@ -127,12 +120,12 @@ if st.button("🔍 Predict Churn"):
 
         except Exception as e:
             st.error(f"Error: {e}")
+            st.stop()
 
-    # Define log file path
+    # --- Logging prediction ---
     os.makedirs("logs", exist_ok=True)
     log_path = "logs/predictions.csv"
 
-    # Add log entry
     log_entry = {
         "timestamp": datetime.datetime.now().isoformat(),
         "model": model_choice,
@@ -141,17 +134,14 @@ if st.button("🔍 Predict Churn"):
     }
     log_entry.update(input_data)
 
-    # Convert to DataFrame
     log_df = pd.DataFrame([log_entry])
 
-    # Append to CSV
     if os.path.exists(log_path):
         log_df.to_csv(log_path, mode='a', index=False, header=False)
     else:
         log_df.to_csv(log_path, index=False)
 
-
-# 🧼 Clean footer
+# --- Clean footer ---
 st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
@@ -159,13 +149,12 @@ footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-
-# 📈 View Logs Section
+# --- Log Visualization ---
 st.markdown("---")
 st.subheader("📊 Prediction Log Overview")
 
-if os.path.exists(log_path):
-    log_data = pd.read_csv(log_path)
+if os.path.exists("logs/predictions.csv"):
+    log_data = pd.read_csv("logs/predictions.csv")
 
     with st.expander("🔍 Show Raw Logs"):
         st.dataframe(log_data.tail(20))
@@ -174,13 +163,11 @@ if os.path.exists(log_path):
 
     with col1:
         st.markdown("### 🔢 Model Usage")
-        model_counts = log_data["model"].value_counts()
-        st.bar_chart(model_counts)
+        st.bar_chart(log_data["model"].value_counts())
 
     with col2:
         st.markdown("### 📊 Prediction Count")
-        pred_counts = log_data["prediction"].value_counts()
-        st.bar_chart(pred_counts)
+        st.bar_chart(log_data["prediction"].value_counts())
 
     st.markdown("### 🎯 Churn Probability Distribution")
     st.line_chart(log_data["probability"])
