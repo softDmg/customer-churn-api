@@ -4,6 +4,9 @@ import streamlit as st
 import pandas as pd
 import joblib
 import os
+import datetime
+
+
 
 # App config
 st.set_page_config(page_title="Churn Predictor", layout="centered")
@@ -125,6 +128,31 @@ if st.button("🔍 Predict Churn"):
         except Exception as e:
             st.error(f"Error: {e}")
 
+
+
+# Define log file path
+os.makedirs("logs", exist_ok=True)
+log_path = "logs/predictions.csv"
+
+# Add log entry
+log_entry = {
+    "timestamp": datetime.datetime.now().isoformat(),
+    "model": model_choice,
+    "prediction": label,
+    "probability": round(probability, 4)
+}
+log_entry.update(input_data)
+
+# Convert to DataFrame
+log_df = pd.DataFrame([log_entry])
+
+# Append to CSV
+if os.path.exists(log_path):
+    log_df.to_csv(log_path, mode='a', index=False, header=False)
+else:
+    log_df.to_csv(log_path, index=False)
+
+
 # 🧼 Clean footer
 st.markdown("""
 <style>
@@ -132,3 +160,32 @@ st.markdown("""
 footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
+
+
+# 📈 View Logs Section
+st.markdown("---")
+st.subheader("📊 Prediction Log Overview")
+
+if os.path.exists(log_path):
+    log_data = pd.read_csv(log_path)
+
+    with st.expander("🔍 Show Raw Logs"):
+        st.dataframe(log_data.tail(20))
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### 🔢 Model Usage")
+        model_counts = log_data["model"].value_counts()
+        st.bar_chart(model_counts)
+
+    with col2:
+        st.markdown("### 📊 Prediction Count")
+        pred_counts = log_data["prediction"].value_counts()
+        st.bar_chart(pred_counts)
+
+    st.markdown("### 🎯 Churn Probability Distribution")
+    st.line_chart(log_data["probability"])
+
+else:
+    st.info("No predictions logged yet.")
