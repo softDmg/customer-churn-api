@@ -3,23 +3,26 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import os
 
 # App config
 st.set_page_config(page_title="Churn Predictor", layout="centered")
 st.title("📞 Customer Churn Prediction")
 st.markdown("Use the form below to check if a customer is likely to churn.")
 
-# --- Simple Login (secrets-based)
+
+# --- Simple Login (via environment variables)
 st.sidebar.title("🔐 Login")
 username_input = st.sidebar.text_input("Username")
 password_input = st.sidebar.text_input("Password", type="password")
 
-if (
-    username_input != st.secrets["auth"]["username"]
-    or password_input != st.secrets["auth"]["password"]
-):
+auth_username = os.getenv("AUTH_USERNAME", "")
+auth_password = os.getenv("AUTH_PASSWORD", "")
+
+if username_input != auth_username or password_input != auth_password:
     st.warning("Please enter valid credentials.")
     st.stop()
+
 
 
 # --- 🔄 Model Selection ---
