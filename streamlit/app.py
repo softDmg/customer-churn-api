@@ -11,18 +11,23 @@ st.title("📞 Customer Churn Prediction")
 st.markdown("Use the form below to check if a customer is likely to churn.")
 
 
-# --- Simple Login (via environment variables)
 st.sidebar.title("🔐 Login")
 username_input = st.sidebar.text_input("Username")
 password_input = st.sidebar.text_input("Password", type="password")
 
-auth_username = os.getenv("AUTH_USERNAME", "")
-auth_password = os.getenv("AUTH_PASSWORD", "")
+# First try Streamlit secrets (local dev)
+try:
+    auth_username = st.secrets["auth"]["username"]
+    auth_password = st.secrets["auth"]["password"]
+except:
+    # Fallback to environment variables (Render)
+    auth_username = os.getenv("AUTH_USERNAME", "")
+    auth_password = os.getenv("AUTH_PASSWORD", "")
 
+# Check credentials
 if username_input != auth_username or password_input != auth_password:
     st.warning("Please enter valid credentials.")
     st.stop()
-
 
 
 # --- 🔄 Model Selection ---
